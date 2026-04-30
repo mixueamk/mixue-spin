@@ -82,16 +82,18 @@
 
         // 加载雪人 Logo 图片（仓库根目录下的 logo.png）
         const logoImg = new Image();
-        logoImg.src = 'logo.png';  // 👈 把 logo.png 上传到仓库即可
+        logoImg.src = 'logo.png';
 
-        function drawWheel(rotation = 0) {
+        // 绘制转盘
+        function drawWheel(rotationDeg) {
             const center = 280;
             const radius = 260;
             const angleStep = (2 * Math.PI) / PRIZES.length;
+            const rotationRad = (rotationDeg * Math.PI) / 180;
             ctx.clearRect(0, 0, 560, 560);
             // 绘制扇形
             for (let i = 0; i < PRIZES.length; i++) {
-                const startAngle = i * angleStep + rotation;
+                const startAngle = i * angleStep + rotationRad;
                 const endAngle = startAngle + angleStep;
                 ctx.beginPath();
                 ctx.moveTo(center, center);
@@ -111,7 +113,7 @@
                 ctx.fillText(PRIZES[i].name, radius - 70, 8);
                 ctx.restore();
             }
-            // 绘制中心圆背景（白色）
+            // 中心圆背景
             ctx.beginPath();
             ctx.arc(center, center, 50, 0, 2 * Math.PI);
             ctx.fillStyle = '#ffffff';
@@ -119,13 +121,11 @@
             ctx.strokeStyle = '#ff4d4d';
             ctx.lineWidth = 3;
             ctx.stroke();
-            // 绘制雪人 Logo 或降级文字
+            // 雪人 Logo 或降级文字
             if (logoImg.complete && logoImg.naturalWidth > 0) {
-                // 图片加载成功，绘制在中心圆内
-                const imgSize = 80; // 图片显示尺寸
+                const imgSize = 80;
                 ctx.drawImage(logoImg, center - imgSize/2, center - imgSize/2, imgSize, imgSize);
             } else {
-                // 图片未加载则显示文字
                 ctx.fillStyle = '#ff4d4d';
                 ctx.font = "bold 22px Arial";
                 ctx.textAlign = "center";
@@ -189,12 +189,16 @@
             currentPrize = getRandomPrize();
             const prizeIndex = PRIZES.findIndex(p => p.name === currentPrize);
             const anglePerPrize = 360 / PRIZES.length;
-            // ✅ 修正角度：指针指向顶部，使正确扇区对准指针
-            const targetAngle = (270 - (prizeIndex * anglePerPrize + anglePerPrize / 2) + 360) % 360;
-            const spins = 5 + Math.floor(Math.random() * 5);
-            const finalRotation = 360 * spins + targetAngle;
-
+            // 🎯 目标：让该扇区的中心对准正上方（270°位置）
+            const targetAbsoluteAngle = (270 - (prizeIndex * anglePerPrize + anglePerPrize / 2) + 360) % 360;
+            // 当前转盘已旋转的角度（度）
             let currentRotation = parseFloat(canvas.dataset.rotation) || 0;
+            // 计算从当前角度到目标角度的正向增量
+            let delta = (targetAbsoluteAngle - currentRotation + 360) % 360;
+            // 加上随机多圈（5~9圈）
+            const spins = 5 + Math.floor(Math.random() * 5);
+            const totalDelta = delta + 360 * spins;
+
             const startRotation = currentRotation;
             const duration = 4000;
             const startTime = Date.now();
@@ -204,9 +208,9 @@
                 const elapsed = now - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const ease = 1 - Math.pow(1 - progress, 3);
-                const rotation = startRotation + finalRotation * ease;
-                drawWheel((rotation * Math.PI) / 180);
-                canvas.dataset.rotation = rotation;
+                const newRotation = startRotation + totalDelta * ease;
+                drawWheel(newRotation);
+                canvas.dataset.rotation = newRotation;
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
