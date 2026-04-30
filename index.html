@@ -80,11 +80,16 @@
         let spinning = false;
         let currentPrize = null;
 
+        // 加载雪人 Logo 图片（仓库根目录下的 logo.png）
+        const logoImg = new Image();
+        logoImg.src = 'logo.png';  // 👈 把 logo.png 上传到仓库即可
+
         function drawWheel(rotation = 0) {
             const center = 280;
             const radius = 260;
             const angleStep = (2 * Math.PI) / PRIZES.length;
             ctx.clearRect(0, 0, 560, 560);
+            // 绘制扇形
             for (let i = 0; i < PRIZES.length; i++) {
                 const startAngle = i * angleStep + rotation;
                 const endAngle = startAngle + angleStep;
@@ -106,13 +111,26 @@
                 ctx.fillText(PRIZES[i].name, radius - 70, 8);
                 ctx.restore();
             }
+            // 绘制中心圆背景（白色）
             ctx.beginPath();
-            ctx.arc(center, center, 40, 0, 2*Math.PI);
-            ctx.fillStyle = '#ff4d4d';
+            ctx.arc(center, center, 50, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
             ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.font = "bold 20px Arial";
-            ctx.fillText("雪王", center, center+8);
+            ctx.strokeStyle = '#ff4d4d';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            // 绘制雪人 Logo 或降级文字
+            if (logoImg.complete && logoImg.naturalWidth > 0) {
+                // 图片加载成功，绘制在中心圆内
+                const imgSize = 80; // 图片显示尺寸
+                ctx.drawImage(logoImg, center - imgSize/2, center - imgSize/2, imgSize, imgSize);
+            } else {
+                // 图片未加载则显示文字
+                ctx.fillStyle = '#ff4d4d';
+                ctx.font = "bold 22px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("雪王", center, center + 8);
+            }
         }
 
         function getRandomPrize() {
@@ -171,7 +189,8 @@
             currentPrize = getRandomPrize();
             const prizeIndex = PRIZES.findIndex(p => p.name === currentPrize);
             const anglePerPrize = 360 / PRIZES.length;
-            const targetAngle = (360 - (prizeIndex * anglePerPrize + anglePerPrize / 2) + 90) % 360;
+            // ✅ 修正角度：指针指向顶部，使正确扇区对准指针
+            const targetAngle = (270 - (prizeIndex * anglePerPrize + anglePerPrize / 2) + 360) % 360;
             const spins = 5 + Math.floor(Math.random() * 5);
             const finalRotation = 360 * spins + targetAngle;
 
@@ -203,6 +222,7 @@
             requestAnimationFrame(animate);
         }
 
+        // 初始绘制
         drawWheel(0);
         canvas.dataset.rotation = 0;
     </script>
