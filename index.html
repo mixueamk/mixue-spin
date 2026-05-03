@@ -61,9 +61,9 @@
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcdpr58FN8f2s2V-_x_UfBIBA7p9rs2SBT5yB3BxHc_0bL8ewQY4B0o6d-qZeN6Qo/exec';
         const PRIZES = [
             { name: '整杯免单', color: '#FFD700', weight: 2 },
-            { name: '免费加三份小料', color: '#00CED1', weight: 8 },
+            { name: '免费加两份小料', color: '#00CED1', weight: 8 },
             { name: '芋圆一份免费', color: '#DA70D6', weight: 10 },
-            { name: '蜜雪钥匙扣', color: '#FF8C00', weight: 15 },
+            { name: '蜜雪礼品', color: '#FF8C00', weight: 15 },
             { name: '谢谢参与', color: '#B0C4DE', weight: 35 }
         ];
         const WEIGHTED_PRIZES = [];
@@ -84,14 +84,12 @@
         const logoImg = new Image();
         logoImg.src = 'logo.png';
 
-        // 绘制转盘
         function drawWheel(rotationDeg) {
             const center = 280;
             const radius = 260;
             const angleStep = (2 * Math.PI) / PRIZES.length;
             const rotationRad = (rotationDeg * Math.PI) / 180;
             ctx.clearRect(0, 0, 560, 560);
-            // 绘制扇形
             for (let i = 0; i < PRIZES.length; i++) {
                 const startAngle = i * angleStep + rotationRad;
                 const endAngle = startAngle + angleStep;
@@ -113,7 +111,6 @@
                 ctx.fillText(PRIZES[i].name, radius - 70, 8);
                 ctx.restore();
             }
-            // 中心圆背景
             ctx.beginPath();
             ctx.arc(center, center, 50, 0, 2 * Math.PI);
             ctx.fillStyle = '#ffffff';
@@ -121,7 +118,6 @@
             ctx.strokeStyle = '#ff4d4d';
             ctx.lineWidth = 3;
             ctx.stroke();
-            // 雪人 Logo 或降级文字
             if (logoImg.complete && logoImg.naturalWidth > 0) {
                 const imgSize = 80;
                 ctx.drawImage(logoImg, center - imgSize/2, center - imgSize/2, imgSize, imgSize);
@@ -189,13 +185,9 @@
             currentPrize = getRandomPrize();
             const prizeIndex = PRIZES.findIndex(p => p.name === currentPrize);
             const anglePerPrize = 360 / PRIZES.length;
-            // 🎯 目标：让该扇区的中心对准正上方（270°位置）
             const targetAbsoluteAngle = (270 - (prizeIndex * anglePerPrize + anglePerPrize / 2) + 360) % 360;
-            // 当前转盘已旋转的角度（度）
             let currentRotation = parseFloat(canvas.dataset.rotation) || 0;
-            // 计算从当前角度到目标角度的正向增量
             let delta = (targetAbsoluteAngle - currentRotation + 360) % 360;
-            // 加上随机多圈（5~9圈）
             const spins = 5 + Math.floor(Math.random() * 5);
             const totalDelta = delta + 360 * spins;
 
@@ -226,7 +218,6 @@
             requestAnimationFrame(animate);
         }
 
-        // 初始绘制
         drawWheel(0);
         canvas.dataset.rotation = 0;
     </script>
