@@ -25,12 +25,28 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.3); width: 100%; max-width: 400px;
             text-align: center;
         }
-        .wheel-container { position: relative; width: 280px; height: 280px; margin: 0 auto 20px; }
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 0 auto 10px; }
         canvas { width: 100%; height: 100%; display: block; }
         .pointer {
             position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
             font-size: 36px; color: #ff4d4d; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
             z-index: 10;
+        }
+        /* 日期显示在转盘下方 */
+        .date-display {
+            background: #fff5f5;
+            border: 2px dashed #ff4d4d;
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin: 8px auto 12px;
+            display: inline-block;
+            text-align: center;
+        }
+        .date-display .cn { 
+            font-size: 16px; font-weight: bold; color: #c0392b; 
+        }
+        .date-display .en { 
+            font-size: 12px; color: #888; display: block; 
         }
         input {
             width: 100%; padding: 12px; border: 2px solid #ff4d4d; border-radius: 15px;
@@ -62,6 +78,11 @@
             <div class="pointer">▼</div>
             <canvas id="wheelCanvas" width="560" height="560"></canvas>
         </div>
+        <!-- 双语日期放在转盘下方 -->
+        <div class="date-display" id="dateDisplay">
+            <span class="cn"></span>
+            <span class="en"></span>
+        </div>
         <input type="tel" id="phoneInput" placeholder="新加坡手机号 | SG Mobile (9xxxxxxx)" />
         <button id="spinBtn" onclick="spin()">🎡 开始抽奖 | SPIN</button>
         <div class="message" id="resultMsg"></div>
@@ -74,7 +95,6 @@
     <script>
         // ========== 配置区 ==========
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcdpr58FN8f2s2V-_x_UfBIBA7p9rs2SBT5yB3BxHc_0bL8ewQY4B0o6d-qZeN6Qo/exec';
-        // 双语奖品名称
         const PRIZES = [
             { name: '整杯免单\nFree Drink', color: '#FFD700', weight: 2 },
             { name: '免费加两份小料\n2x Free Topping', color: '#00CED1', weight: 8 },
@@ -93,14 +113,16 @@
         const spinBtn = document.getElementById('spinBtn');
         const phoneInput = document.getElementById('phoneInput');
         const resultMsg = document.getElementById('resultMsg');
+        const dateDisplayCN = document.querySelector('#dateDisplay .cn');
+        const dateDisplayEN = document.querySelector('#dateDisplay .en');
         let spinning = false;
         let currentPrize = null;
 
         const logoImg = new Image();
         logoImg.src = 'logo.png';
 
-        // 获取当天日期（双语格式）
-        function getDateStrings() {
+        // 更新日期显示
+        function updateDateDisplay() {
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -108,10 +130,8 @@
             const weekdaysCN = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
             const weekdaysEN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const wd = now.getDay();
-            return {
-                cn: `${year}年${month}月${day}日 ${weekdaysCN[wd]}`,
-                en: `${year}-${month}-${day} ${weekdaysEN[wd]}`
-            };
+            dateDisplayCN.textContent = `📅 ${year}年${month}月${day}日 ${weekdaysCN[wd]}`;
+            dateDisplayEN.textContent = `${year}-${month}-${day} ${weekdaysEN[wd]}`;
         }
 
         function drawWheel(rotationDeg) {
@@ -121,11 +141,9 @@
             const rotationRad = (rotationDeg * Math.PI) / 180;
             ctx.clearRect(0, 0, 560, 560);
 
-            // 绘制扇形和文字
             for (let i = 0; i < PRIZES.length; i++) {
                 const startAngle = i * angleStep + rotationRad;
                 const endAngle = startAngle + angleStep;
-                // 扇形
                 ctx.beginPath();
                 ctx.moveTo(center, center);
                 ctx.arc(center, center, radius, startAngle, endAngle);
@@ -135,7 +153,6 @@
                 ctx.strokeStyle = 'white';
                 ctx.lineWidth = 3;
                 ctx.stroke();
-                // 双语文字
                 ctx.save();
                 ctx.translate(center, center);
                 ctx.rotate(startAngle + angleStep / 2);
@@ -150,7 +167,7 @@
                 ctx.restore();
             }
 
-            // 中心圆背景
+            // 中心圆
             ctx.beginPath();
             ctx.arc(center, center, 50, 0, 2 * Math.PI);
             ctx.fillStyle = '#ffffff';
@@ -159,7 +176,6 @@
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            // 中心Logo或文字
             if (logoImg.complete && logoImg.naturalWidth > 0) {
                 const imgSize = 80;
                 ctx.drawImage(logoImg, center - imgSize/2, center - imgSize/2, imgSize, imgSize);
@@ -172,24 +188,6 @@
                 ctx.font = "11px Arial";
                 ctx.fillText("MIXUE", center, center + 22);
             }
-
-            // ✅ 日期显示在canvas顶部（截图必定包含）
-            const dates = getDateStrings();
-            // 日期背景条
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-            ctx.fillRect(center - 155, 8, 310, 44);
-            ctx.strokeStyle = '#ff4d4d';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(center - 155, 8, 310, 44);
-            // 中文日期
-            ctx.fillStyle = '#c0392b';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('📅 ' + dates.cn, center, 30);
-            // 英文日期
-            ctx.fillStyle = '#888';
-            ctx.font = '11px Arial';
-            ctx.fillText(dates.en, center, 46);
         }
 
         function getRandomPrize() {
@@ -219,7 +217,6 @@
 
         async function logToSheet(phone, prize) {
             try {
-                // 只取中文名记录到表格
                 const prizeCN = prize.split('\n')[0];
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
@@ -286,7 +283,8 @@
             requestAnimationFrame(animate);
         }
 
-        // 初始绘制
+        // 初始化
+        updateDateDisplay();
         drawWheel(0);
         canvas.dataset.rotation = 0;
     </script>
