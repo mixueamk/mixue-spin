@@ -28,6 +28,18 @@
             font-size: 36px; color: #ff4d4d; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
             z-index: 10;
         }
+        /* 日期显示 */
+        .date-display {
+            background: #fff5f5;
+            border: 2px dashed #ff4d4d;
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin: 10px auto;
+            display: inline-block;
+            font-size: 15px;
+            font-weight: bold;
+            color: #c0392b;
+        }
         input {
             width: 100%; padding: 12px; border: 2px solid #ff4d4d; border-radius: 15px;
             font-size: 16px; margin: 10px 0; text-align: center;
@@ -39,13 +51,14 @@
         }
         button:active { transform: translateY(2px); box-shadow: 0 2px 0 #c0392b; }
         button:disabled { background: #aaa; box-shadow: 0 4px 0 #777; cursor: not-allowed; }
-        .message { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 30px; }
+        .message { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 30px; color: #c0392b; }
         .note { font-size: 12px; color: #666; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="logo">🍦 蜜雪冰城 · 波动巴西店</div>
     <div class="container">
+        <div class="date-display" id="dateDisplay"></div>
         <div class="wheel-container">
             <div class="pointer">▼</div>
             <canvas id="wheelCanvas" width="560" height="560"></canvas>
@@ -53,7 +66,7 @@
         <input type="tel" id="phoneInput" placeholder="请输入新加坡手机号 (9xxxxxxx)" />
         <button id="spinBtn" onclick="spin()">🎡 开始抽奖</button>
         <div class="message" id="resultMsg"></div>
-        <div class="note">每天每号限抽1次，奖品到店出示群内中奖消息兑换</div>
+        <div class="note">每天每号限抽1次，请截图保存，到店出示兑换</div>
     </div>
 
     <script>
@@ -77,12 +90,24 @@
         const spinBtn = document.getElementById('spinBtn');
         const phoneInput = document.getElementById('phoneInput');
         const resultMsg = document.getElementById('resultMsg');
+        const dateDisplay = document.getElementById('dateDisplay');
         let spinning = false;
         let currentPrize = null;
 
         // 加载雪人 Logo 图片（仓库根目录下的 logo.png）
         const logoImg = new Image();
         logoImg.src = 'logo.png';
+
+        // 🕐 显示当天日期和星期
+        function updateDateDisplay() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[now.getDay()];
+            dateDisplay.textContent = `📅 ${year}年${month}月${day}日 ${weekday}`;
+        }
 
         function drawWheel(rotationDeg) {
             const center = 280;
@@ -218,6 +243,8 @@
             requestAnimationFrame(animate);
         }
 
+        // 初始化
+        updateDateDisplay();
         drawWheel(0);
         canvas.dataset.rotation = 0;
     </script>
